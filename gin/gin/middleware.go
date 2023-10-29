@@ -36,12 +36,19 @@ func ErrorHandler() gin.HandlerFunc {
 
 		if len(c.Errors) > 0 {
 			for _, err := range c.Errors {
-				// TODO: handle error by error type
-				c.JSON(http.StatusInternalServerError, &response.FailResponse{
-					Code:    http.StatusInternalServerError,
-					Status:  response.FailStatus,
-					Message: err.Err.Error(),
-				})
+				if responseFailed, ok := err.Err.(*response.FailResponse); ok {
+					c.JSON(responseFailed.Code, &response.FailResponse{
+						Code:    responseFailed.Code,
+						Status:  responseFailed.Status,
+						Message: responseFailed.Error(),
+					})
+				} else {
+					c.JSON(http.StatusInternalServerError, &response.FailResponse{
+						Code:    http.StatusInternalServerError,
+						Status:  response.FailStatus,
+						Message: err.Err.Error(),
+					})
+				}
 			}
 
 			c.Abort()

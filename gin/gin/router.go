@@ -45,6 +45,7 @@ func NewGinRouter() *GinRouter {
 	r := gin.Default()
 
 	r.Use(CORS())
+	r.Use(ErrorHandler())
 
 	// initial swagger doc
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))

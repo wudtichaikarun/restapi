@@ -1,8 +1,11 @@
 package gin
 
 import (
+	"net/http"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/wudtichaikarun/restapi/response/response"
 )
 
 func CORS() gin.HandlerFunc {
@@ -15,4 +18,33 @@ func CORS() gin.HandlerFunc {
 	config.AllowHeaders = []string{"*"}
 
 	return cors.New(config)
+}
+
+func ErrorHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if r := recover(); r != nil {
+				c.JSON(http.StatusInternalServerError, &response.FailResponse{
+					Code:    http.StatusInternalServerError,
+					Status:  response.FailStatus,
+					Message: "Internal Server Error",
+				})
+			}
+		}()
+
+		c.Next()
+
+		if len(c.Errors) > 0 {
+			for _, err := range c.Errors {
+				// TODO: handle error by error type
+				c.JSON(http.StatusInternalServerError, &response.FailResponse{
+					Code:    http.StatusInternalServerError,
+					Status:  response.FailStatus,
+					Message: err.Err.Error(),
+				})
+			}
+
+			c.Abort()
+		}
+	}
 }
